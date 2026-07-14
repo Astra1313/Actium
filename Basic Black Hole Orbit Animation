@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+#Sabitler ve Başlangıç Koşulları
+G = 1.0          
+M_blackhole = 1000000000.0
+dt = 0.01        
+
+
+x, y = 2500.0, 0.0     # Başlangıç konumu
+vx, vy = 0.0, 100.0    # Başlangıç hızı
+
+# Grafik ekranı
+fig, ax = plt.subplots(figsize=(8, 8))
+fig.patch.set_facecolor('black')
+ax.set_facecolor('black')
+
+# Çizim elemanları
+kara_delik, = ax.plot([0], [0], 'ro', markersize=15, label='Black Hole')
+yorunge_cizgisi, = ax.plot([], [], color='cyan', alpha=0.6, label='Planet Orbit')
+gezegen_noktasi, = ax.plot([], [], 'go', markersize=8, label='Planet')
+
+# Grafik sınırları 
+ax.set_xlim(-4000, 4000)
+ax.set_ylim(-4000, 4000)
+ax.set_title("Live Black Hole Orbit Animation", color='white')
+ax.legend(loc='upper right')
+ax.grid(color='gray', linestyle='--', linewidth=0.3)
+
+
+ax.tick_params(colors='white')
+for spine in ax.spines.values():
+    spine.set_color('white')
+
+# Konum geçmişini tutacak listeler
+x_hist = []
+y_hist = []
+
+#(Fizik Motoru)
+def update(frame):
+    global x, y, vx, vy
+    
+    r = np.sqrt(x**2 + y**2)
+    
+    # Olay ufku kontrolü
+    if r < 2.0:
+        return gezegen_noktasi, yorunge_cizgisi
+        
+    # İvme hesaplama
+    ax_grav = -G * M_blackhole * x / (r**3)
+    ay_grav = -G * M_blackhole * y / (r**3)
+    
+    # Hız ve konum güncelleme(Euler Metodu)
+    vx += ax_grav * dt
+    vy += ay_grav * dt
+    x += vx * dt
+    y += vy * dt
+    
+    # Geçmişe kaydet
+    x_hist.append(x)
+    y_hist.append(y)
+    
+    # Grafik elemanlarını güncelle
+    yorunge_cizgisi.set_data(x_hist, y_hist)
+    gezegen_noktasi.set_data([x], [y])
+    
+    return gezegen_noktasi, yorunge_cizgisi
+
+ani = animation.FuncAnimation(fig, update, frames=500, interval=10, blit=True)
+
+plt.show()
